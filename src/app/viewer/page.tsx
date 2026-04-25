@@ -4,11 +4,11 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ChevronLeft, FileCode2, ExternalLink,
+  ChevronLeft, FileCode2,
   BookOpen, List, X,
 } from 'lucide-react';
 import { MOCK_FILES, type MockFile } from '@/data/mockFiles';
-import { detectLanguage, getLanguageConfig } from '@/lib/language';
+import { detectLanguage } from '@/lib/language';
 import { LANGUAGE_MAP } from '@/constants/LANGUAGES';
 import CodeViewer from '@/components/viewer/CodeViewer';
 import LivePreview from '@/components/viewer/LivePreview';

@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
-import type * as Monaco from 'monaco-editor';
+import type { OnMount } from '@monaco-editor/react';
 
 /* ── Monaco loaded only on client, never SSR ─────────────── */
 const MonacoEditor = dynamic(
@@ -75,19 +75,19 @@ export default function CodeViewer({
     height = '100%',
     onChange,
 }: CodeViewerProps) {
-    const monacoRef = useRef<typeof Monaco | null>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const monacoRef = useRef<any>(null);
 
-    function handleMount(_editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) {
+    const handleMount: OnMount = (_editor, monaco) => {
         monacoRef.current = monaco;
-
-        // Register our custom theme
         monaco.editor.defineTheme('devfolio-dark', MONACO_THEME);
         monaco.editor.setTheme('devfolio-dark');
-    }
+    };
 
-    /* ── re-apply theme when monaco loads ───────────────────── */
+    /* ── re-apply theme if ref already populated ─────────────── */
     useEffect(() => {
-        if (monacoRef.current) {
+        if (monacoRef.current !== null) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             monacoRef.current.editor.setTheme('devfolio-dark');
         }
     }, []);

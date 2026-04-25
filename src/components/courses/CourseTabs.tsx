@@ -70,7 +70,7 @@ function getMockSnippets(courseId: string): MockFile[] {
     ];
 }
 
-function getMockProjects(courseId: string): MockProject[] {
+function getMockProjects(_courseId: string): MockProject[] {
     return [
         { title: 'Hello World App', description: 'First project to get started with the basics.', difficulty: 'Beginner', files: 3 },
         { title: 'CRUD Application', description: 'Create, read, update and delete operations end-to-end.', difficulty: 'Beginner', files: 7 },

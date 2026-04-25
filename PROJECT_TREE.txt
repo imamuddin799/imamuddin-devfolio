@@ -53,6 +53,8 @@ imamuddin-devfolio
 │   │       └── page.tsx
 │   ├── components
 │   │   ├── courses
+│   │   │   ├── CourseCard.tsx
+│   │   │   └── CourseGrid.tsx
 │   │   ├── layout
 │   │   │   ├── Navbar.tsx
 │   │   │   └── PageWrapper.tsx

@@ -546,7 +546,7 @@ This snapshot is used to give AI full context of your current structure.
 ### Install tree tool (one time):
 ```bash
 # Windows (via npm — works everywhere)
-npm install -g tree-cli
+npm install -g tree-node-cli
 
 # Mac
 brew install tree
@@ -558,7 +558,7 @@ sudo apt install tree
 ### Generate snapshot (run from project root):
 ```bash
 # Windows (tree-cli)
-tree --ignore "node_modules,.next,dist,build,.git,*.log" -l 5 > PROJECT_TREE.txt
+npx --yes tree-node-cli -I "node_modules,.next,dist,build,.git,*.log" > PROJECT_TREE.txt
 
 # Mac/Linux
 tree -I "node_modules|.next|dist|build|.git|*.log" -L 5 > PROJECT_TREE.txt

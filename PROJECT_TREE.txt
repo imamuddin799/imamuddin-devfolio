@@ -1,0 +1,102 @@
+imamuddin-devfolio
+├── AGENTS.md
+├── AI_INSTRUCTIONS.md
+├── CLAUDE.md
+├── LICENSE
+├── PROJECT_MEMORY.md
+├── PROJECT_TREE.txt
+├── README.md
+├── SETUP_INSTRUCTIONS.md
+├── UNIVERSAL_PROJECT_BOOTSTRAP.md
+├── components.json
+├── eslint.config.mjs
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── icons
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── scripts
+│   └── scaffold.js
+├── src
+│   ├── app
+│   │   ├── api
+│   │   │   ├── courses
+│   │   │   │   ├── [course]
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── execute
+│   │   │   │   └── route.ts
+│   │   │   └── file
+│   │   │       └── route.ts
+│   │   ├── courses
+│   │   │   ├── [course]
+│   │   │   │   ├── [section]
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── loading.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── loading.tsx
+│   │   │   └── page.tsx
+│   │   ├── error.tsx
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   ├── loading.tsx
+│   │   ├── not-found.tsx
+│   │   ├── page.tsx
+│   │   └── viewer
+│   │       └── page.tsx
+│   ├── components
+│   │   ├── courses
+│   │   ├── layout
+│   │   │   ├── Navbar.tsx
+│   │   │   └── PageWrapper.tsx
+│   │   ├── projects
+│   │   ├── shared
+│   │   │   ├── EmptyState.tsx
+│   │   │   ├── ErrorState.tsx
+│   │   │   └── LanguageBadge.tsx
+│   │   ├── ui
+│   │   │   ├── alert.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── breadcrumb.tsx
+│   │   │   ├── button.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── drawer.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── label.tsx
+│   │   │   ├── scroll-area.tsx
+│   │   │   ├── select.tsx
+│   │   │   ├── separator.tsx
+│   │   │   ├── skeleton.tsx
+│   │   │   ├── sonner.tsx
+│   │   │   ├── tabs.tsx
+│   │   │   ├── textarea.tsx
+│   │   │   └── tooltip.tsx
+│   │   └── viewer
+│   ├── constants
+│   │   ├── COURSES.ts
+│   │   ├── LANGUAGES.ts
+│   │   └── ROUTES.ts
+│   ├── data
+│   │   └── courses.ts
+│   ├── hooks
+│   │   ├── useCodeExecution.ts
+│   │   └── useCopyToClipboard.ts
+│   ├── lib
+│   │   ├── env.ts
+│   │   ├── github.ts
+│   │   ├── judge0.ts
+│   │   ├── language.ts
+│   │   └── utils.ts
+│   └── types
+│       ├── Api.types.ts
+│       ├── Course.types.ts
+│       ├── GitHub.types.ts
+│       └── Judge0.types.ts
+└── tsconfig.json

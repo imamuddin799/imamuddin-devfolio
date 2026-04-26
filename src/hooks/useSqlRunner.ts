@@ -2,13 +2,14 @@
 
 import { useState, useCallback, useRef } from 'react';
 
-export interface SqlRow {
+/* ── Types ───────────────────────────────────────────────── */
+interface SqlTable {
     columns: string[];
     values: (string | number | null)[][];
 }
 
-export interface SqlRunnerResult {
-    rows: SqlRow[];
+export interface SqlResult {
+    rows: SqlTable[];
     error: string | null;
     timeMs: number;
 }
@@ -17,55 +18,115 @@ type SqlState = 'idle' | 'loading' | 'running' | 'done' | 'error';
 
 interface UseSqlRunnerReturn {
     state: SqlState;
-    result: SqlRunnerResult | null;
+    result: SqlResult | null;
     run: (sql: string) => Promise<void>;
     reset: () => void;
 }
 
+/* ── sql.js type shim (no @types/sql.js needed) ─────────── */
+interface SqlJsStatic {
+    Database: new (data?: ArrayBuffer | null) => SqlDatabase;
+}
+
+interface SqlDatabase {
+    exec: (sql: string) => SqlTable[];
+    close: () => void;
+}
+
+/* ── Singleton loader ────────────────────────────────────── */
+let sqlJsPromise: Promise<SqlJsStatic> | null = null;
+
+function loadSqlJs(): Promise<SqlJsStatic> {
+    if (sqlJsPromise !== null) return sqlJsPromise;
+
+    sqlJsPromise = new Promise((resolve, reject) => {
+        /*
+          Load sql.js from jsDelivr. We need the WASM file to be reachable —
+          locateFile tells sql.js where to find sql-wasm.wasm relative to the JS.
+          Using the same CDN version for both JS and WASM avoids mismatches.
+        */
+        const CDNBASE = 'https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/';
+
+        const script = document.createElement('script');
+        script.src = `${CDNBASE}sql-wasm.js`;
+        script.async = true;
+
+        script.onload = () => {
+            const initSqlJs = (window as unknown as Record<string, unknown>)['initSqlJs'] as
+                ((config: { locateFile: (f: string) => string }) => Promise<SqlJsStatic>) | undefined;
+
+            if (initSqlJs === undefined) {
+                reject(new Error('initSqlJs not found on window after script load'));
+                return;
+            }
+
+            initSqlJs({
+                locateFile: (file: string) => `${CDNBASE}${file}`,
+            })
+                .then(resolve)
+                .catch(reject);
+        };
+
+        script.onerror = () => reject(new Error('Failed to load sql.js from CDN'));
+        document.head.appendChild(script);
+    });
+
+    return sqlJsPromise;
+}
+
+/* ══════════════════════════════════════════════════════════
+   HOOK
+══════════════════════════════════════════════════════════ */
 export function useSqlRunner(): UseSqlRunnerReturn {
     const [state, setState] = useState<SqlState>('idle');
-    const [result, setResult] = useState<SqlRunnerResult | null>(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dbRef = useRef<any>(null);
+    const [result, setResult] = useState<SqlResult | null>(null);
+    const sqlJsRef = useRef<SqlJsStatic | null>(null);
 
-    const initDb = useCallback(async () => {
-        if (dbRef.current !== null) return;
-
+    const run = useCallback(async (sql: string): Promise<void> => {
         setState('loading');
+        setResult(null);
 
-        // Dynamic import — sql.js accesses window, must be client-only
-        const initSqlJs = (await import('sql.js')).default;
-        const SQL = await initSqlJs({
-            // WASM file served from public/
-            locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/sql.js@1.12.0/dist/${file}`,
-        });
-        dbRef.current = new SQL.Database();
-    }, []);
-
-    const run = useCallback(async (sql: string) => {
         try {
-            await initDb();
-            setState('running');
-            setResult(null);
+            // Load sql.js once, cache in ref
+            if (sqlJsRef.current === null) {
+                const SQL = await loadSqlJs();
+                sqlJsRef.current = SQL;
+            }
 
+            setState('running');
+
+            const SQL = sqlJsRef.current;
+            const db = new SQL.Database();
             const t0 = performance.now();
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-            const raw = dbRef.current.exec(sql) as SqlRow[];
+
+            let rows: SqlTable[] = [];
+            let error: string | null = null;
+
+            try {
+                rows = db.exec(sql);
+            } catch (e) {
+                error = e instanceof Error ? e.message : String(e);
+            } finally {
+                db.close();
+            }
+
             const timeMs = performance.now() - t0;
 
-            setResult({ rows: raw, error: null, timeMs });
+            setResult({ rows, error, timeMs });
             setState('done');
+
         } catch (err) {
-            const msg = err instanceof Error ? err.message : 'Unknown SQL error';
+            const msg = err instanceof Error ? err.message : 'Unknown error loading SQL engine';
             setResult({ rows: [], error: msg, timeMs: 0 });
             setState('error');
+            // Reset promise so next run retries the load
+            sqlJsPromise = null;
         }
-    }, [initDb]);
+    }, []);
 
-    const reset = useCallback(() => {
-        setResult(null);
+    const reset = useCallback((): void => {
         setState('idle');
-        dbRef.current = null; // fresh DB on next run
+        setResult(null);
     }, []);
 
     return { state, result, run, reset };

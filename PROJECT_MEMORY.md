@@ -337,13 +337,20 @@ ViewerPage (Suspense wrapper)
 | 014 | SplitLayout drag handle | Better UX than fixed 50/50 split |
 | 015 | Suspense on viewer page | useSearchParams() needs Suspense boundary |
 | 016 | iframe sandbox="allow-scripts" | Security — no allow-same-origin ever |
-| 017 | Change from Piston API (went whitelist-only 2/15/2025) to Judge0 CE community instance (ce.judge0.com) — free, no key |
+| 017 | Piston API abandoned (whitelist-only Feb 2025) → Judge0 CE (ce.judge0.com) called directly from browser |
+| 018 | Java source renamed to Main before Judge0 CE submission (always compiles as Main.java) |
+| 019 | TypeScript/SpringBoot marked canRun:false — Judge0 CE can't handle them reliably |
+| 020 | sql.js loaded via script tag from jsDelivr CDN with explicit locateFile for WASM |
 
-Known Gotcha 4: Piston API is whitelist-only since Feb 2025 — use ce.judge0.com instead
+Known Gotchas — append:
+15. Judge0 CE → call from browser directly (server-side blocked). base64_encoded=true required for emoji/Unicode
+16. Spring Boot / Hibernate → canRun:false, detectLanguage() checks path segment not just extension
+17. TypeScript → canRun:false, Judge0 CE ts-node misreads generics as syntax errors
+18. sql.js WASM → must use locateFile CDN config, dynamic import() alone fails in Next.js
 
 File status — update:
-src/app/api/execute/route.ts   ✅  (was ⬜)
-src/types/Judge0.types.ts      → renamed to Execution.types.ts
+src/lib/language.ts   ✅ path-aware detectLanguage (springboot/hibernate detection)
+src/hooks/useSqlRunner.ts  ✅ CDN script tag loader with locateFile
 
 Phase 3 note — replace Judge0 warning line with:
 ⚠️ Piston API is used for execution (no key needed). sql.js loads WASM from CDN.

@@ -15,8 +15,8 @@ import CopyButton from '@/components/shared/CopyButton';
 import RunButton from '@/components/viewer/RunButton';
 
 /* ── Language badge ──────────────────────────────────────── */
-function LangBadge({ filename }: { filename: string }) {
-  const lang = detectLanguage(filename);
+function LangBadge({ file }: { file: MockFile }) {
+  const lang = detectLanguage(file.name, file.path);
   const config = LANGUAGE_MAP[lang];
   const color = config?.color != null ? `var(${config.color})` : 'var(--text-muted)';
   const label = config?.display ?? lang.toUpperCase();
@@ -74,7 +74,7 @@ function FileSidebar({
 
       <div className="flex-1 overflow-y-auto py-2">
         {files.map((file) => {
-          const lang = detectLanguage(file.name);
+          const lang = detectLanguage(file.name, file.path);
           const config = LANGUAGE_MAP[lang];
           const color = config?.color != null ? `var(${config.color})` : 'var(--text-muted)';
           const isActive = file.path === active.path;
@@ -119,7 +119,7 @@ function TopBar({
   onRun: () => void;
   execState: ReturnType<typeof useCodeExecution>['state'];
 }) {
-  const lang = detectLanguage(file.name);
+  const lang = detectLanguage(file.name, file.path);
   const config = LANGUAGE_MAP[lang];
   const canRun = config?.canRun ?? false;
 
@@ -166,7 +166,7 @@ function TopBar({
 
       {/* Right actions */}
       <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-        <LangBadge filename={file.name} />
+        <LangBadge file={file} />
         <CopyButton text={file.content} size="sm" label />
         {canRun && <RunButton state={execState} onRun={onRun} />}
       </div>
@@ -207,17 +207,10 @@ function ViewerInner() {
      languages. SQL uses the sql runner (SqlPreview), not Piston.
   ─────────────────────────────────────────────────────────── */
   const handleRun = (): void => {
-    const lang = detectLanguage(activeFile.name);
+    const lang = detectLanguage(activeFile.name, activeFile.path); // ← add path
     const config = LANGUAGE_MAP[lang];
-
-    // Guard: only call Piston for languages that have a runtime config
     if (config?.piston === null || config?.piston === undefined) return;
-
-    void execute(
-      activeFile.content,
-      config.piston.language,
-      config.piston.version,
-    );
+    void execute(activeFile.content, config.piston.language, config.piston.version);
   };
 
   const editorPanel = (

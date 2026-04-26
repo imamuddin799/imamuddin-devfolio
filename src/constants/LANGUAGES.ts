@@ -1,23 +1,17 @@
-/*
-  Execution runtime config.
-  The route /api/execute maps language name → Judge0 CE language ID internally.
-  The `piston` field name is kept for backwards compatibility with useCodeExecution
-  and viewer/page.tsx — only the language string is used by the route.
-*/
-
 export interface PistonRuntime {
   language: string;
-  version: string; // kept for API compat — route uses language name only
+  version: string;
 }
 
 export interface LanguageConfig {
   monaco: string;
-  piston: PistonRuntime | null; // null = not server-executable
+  piston: PistonRuntime | null;
   display: string;
   color: string | null;
   canRun: boolean;
   canPreview: boolean;
   previewType: 'iframe' | 'terminal' | 'sql' | 'none';
+  runNote?: string;
 }
 
 export const LANGUAGE_MAP: Record<string, LanguageConfig> = {
@@ -36,10 +30,13 @@ export const LANGUAGE_MAP: Record<string, LanguageConfig> = {
     color: '--color-js', canRun: true, canPreview: true, previewType: 'terminal',
   },
   typescript: {
-    monaco: 'typescript',
-    piston: { language: 'typescript', version: '5.0.3' },
-    display: 'TypeScript',
-    color: '--color-js', canRun: true, canPreview: false, previewType: 'terminal',
+    /*
+      Judge0 CE language 74 (ts-node) misinterprets generics and JSX
+      as malformed regex/syntax. Mark as read-only to avoid confusing errors.
+    */
+    monaco: 'typescript', piston: null, display: 'TypeScript',
+    color: '--color-js', canRun: false, canPreview: false, previewType: 'none',
+    runNote: 'TypeScript execution not supported in this environment',
   },
   java: {
     monaco: 'java',
@@ -56,6 +53,15 @@ export const LANGUAGE_MAP: Record<string, LanguageConfig> = {
   sql: {
     monaco: 'sql', piston: null, display: 'SQL',
     color: '--color-sql', canRun: true, canPreview: false, previewType: 'sql',
+  },
+  springboot: {
+    /*
+      Spring Boot requires Maven + Spring jars — not available in Judge0 CE's
+      plain javac environment. Display as read-only Java syntax.
+    */
+    monaco: 'java', piston: null, display: 'Spring Boot',
+    color: '--color-spring', canRun: false, canPreview: false, previewType: 'none',
+    runNote: 'Spring Boot requires a full Maven build environment',
   },
   markdown: {
     monaco: 'markdown', piston: null, display: 'Markdown',

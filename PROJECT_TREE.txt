@@ -54,15 +54,22 @@ imamuddin-devfolio
 │   ├── components
 │   │   ├── courses
 │   │   │   ├── CourseCard.tsx
-│   │   │   └── CourseGrid.tsx
+│   │   │   ├── CourseGrid.tsx
+│   │   │   └── CourseTabs.tsx
 │   │   ├── layout
 │   │   │   ├── Navbar.tsx
 │   │   │   └── PageWrapper.tsx
 │   │   ├── projects
+│   │   │   ├── DifficultyBadge.tsx
+│   │   │   ├── ProjectCard.tsx
+│   │   │   └── ProjectGrid.tsx
 │   │   ├── shared
+│   │   │   ├── Breadcrumb.tsx
+│   │   │   ├── CopyButton.tsx
 │   │   │   ├── EmptyState.tsx
 │   │   │   ├── ErrorState.tsx
-│   │   │   └── LanguageBadge.tsx
+│   │   │   ├── LanguageBadge.tsx
+│   │   │   └── Skeleton.tsx
 │   │   ├── ui
 │   │   │   ├── alert.tsx
 │   │   │   ├── badge.tsx
@@ -81,15 +88,24 @@ imamuddin-devfolio
 │   │   │   ├── textarea.tsx
 │   │   │   └── tooltip.tsx
 │   │   └── viewer
+│   │       ├── CodeViewer.tsx
+│   │       ├── HtmlPreview.tsx
+│   │       ├── LivePreview.tsx
+│   │       ├── RunButton.tsx
+│   │       ├── SplitLayout.tsx
+│   │       ├── SqlPreview.tsx
+│   │       └── TerminalOutput.tsx
 │   ├── constants
 │   │   ├── COURSES.ts
 │   │   ├── LANGUAGES.ts
 │   │   └── ROUTES.ts
 │   ├── data
-│   │   └── courses.ts
+│   │   ├── courses.ts
+│   │   └── mockFiles.ts
 │   ├── hooks
 │   │   ├── useCodeExecution.ts
-│   │   └── useCopyToClipboard.ts
+│   │   ├── useCopyToClipboard.ts
+│   │   └── useSqlRunner.ts
 │   ├── lib
 │   │   ├── env.ts
 │   │   ├── github.ts

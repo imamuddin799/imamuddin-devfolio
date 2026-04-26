@@ -1,6 +1,22 @@
 # 🧠 PROJECT MEMORY — imamuddin-devfolio
 > Every AI MUST read `AI_INSTRUCTIONS.md` first, then this file before writing any code.
-> Last Updated: Phase 2 COMPLETE ✅ — Phase 3 (Live Execution) is next.
+> Last Updated: Phase 3 COMPLETE ✅ — Phase 4 (Polish & GitHub) is next.
+
+## 📝 MEMORY UPDATE RULES — ALL AIs MUST FOLLOW
+```
+1. SURGICAL EDITS ONLY — never rewrite the entire file
+2. Update ONLY sections that actually changed:
+   - "Last Updated" line at the top
+   - STATUS section percentages + phase label
+   - File status lines (⬜ → ✅)
+   - Build phase checkboxes ([ ] → [✅])
+   - Decisions Log / Gotchas — append only, never replace
+3. NEVER touch: stack, design system, types, page map, architecture
+   unless something in those sections genuinely changed
+4. Keep file lean — no duplicating content already in AI_INSTRUCTIONS.md
+5. After any session add a single line to Decisions Log if a new
+   architectural choice was made. Do not add trivial entries.
+```
 
 ---
 
@@ -15,7 +31,7 @@
 | **GitHub Repo (Content)** | [YOUR_USERNAME]/java-fullstack-journey |
 | **GitHub Repo (App)** | [YOUR_USERNAME]/imamuddin-devfolio |
 | **Deployment** | Vercel |
-| **Status** | 🟡 Phase 3 Starting — Live Code Execution |
+| **Status** | 🟡 Phase 4 Starting — Polish & GitHub Connect |
 | **Dev URL** | http://localhost:3000 |
 
 ---
@@ -163,8 +179,9 @@ src/components/viewer/CodeViewer.tsx             ✅ Monaco, custom dark theme
 src/components/viewer/LivePreview.tsx            ✅ routes to iframe/terminal/sql/none
 src/components/viewer/HtmlPreview.tsx            ✅ sandboxed iframe, refresh button
 src/components/viewer/SplitLayout.tsx            ✅ draggable split, mobile tabs
-src/components/viewer/TerminalOutput.tsx         ⬜ Phase 3 — NEXT
-src/components/viewer/SqlPreview.tsx             ⬜ Phase 3 — NEXT
+src/components/viewer/TerminalOutput.tsx         ✅ idle/running/success/error, meta row
+src/components/viewer/SqlPreview.tsx             ✅ editable textarea, table output, reset
+src/components/viewer/RunButton.tsx              ✅ 4 states, only shows for canRun langs
 ```
 
 ### Hooks / Lib / Data
@@ -186,13 +203,13 @@ src/data/mockFiles.ts                            ✅ 9 demo files, all languages
 
 | Output File | → Copy to |
 |---|---|
-| `mockFiles.ts` | `src/data/mockFiles.ts` |
-| `CopyButton.tsx` | `src/components/shared/CopyButton.tsx` |
-| `CodeViewer.tsx` | `src/components/viewer/CodeViewer.tsx` |
-| `HtmlPreview.tsx` | `src/components/viewer/HtmlPreview.tsx` |
-| `LivePreview.tsx` | `src/components/viewer/LivePreview.tsx` |
-| `SplitLayout.tsx` | `src/components/viewer/SplitLayout.tsx` |
-| `viewer-page.tsx` | `src/app/viewer/page.tsx` |
+| `TerminalOutput.tsx` | `src/components/viewer/TerminalOutput.tsx` |
+| `RunButton.tsx` | `src/components/viewer/RunButton.tsx` |
+| `SqlPreview.tsx` | `src/components/viewer/SqlPreview.tsx` |
+| `useSqlRunner.ts` | `src/hooks/useSqlRunner.ts` |
+| `execute-route.ts` | `src/app/api/execute/route.ts` |
+| `LivePreview.tsx` | `src/components/viewer/LivePreview.tsx` (replace) |
+| `viewer-page.tsx` | `src/app/viewer/page.tsx` (replace) |
 
 ---
 
@@ -240,7 +257,17 @@ ViewerPage (Suspense wrapper)
 [✅] viewer/page.tsx — full viewer with sidebar, topbar, split view
 ```
 
-### Phase 3 — Live Code Execution ⬜ NEXT
+### Phase 3 — Live Code Execution ✅ COMPLETE
+```
+[✅] TerminalOutput.tsx — idle/running/success/error, stdout/stderr/compile, meta
+[✅] RunButton.tsx — 4 states, only visible for canRun languages
+[✅] SqlPreview.tsx — editable textarea, sql.js via CDN, table output, reset
+[✅] useSqlRunner.ts — sql.js dynamic import, fresh DB per run
+[✅] execute-route.ts — Judge0 POST, Zod validation, 10s polling
+[✅] LivePreview.tsx — updated: routes terminal/sql/iframe to correct component
+[✅] viewer-page.tsx — updated: RunButton in TopBar, wired to useCodeExecution
+```
+> ⚠️ Judge0 needs JUDGE0_API_KEY in .env.local to work. sql.js loads WASM from CDN.
 ```
 [ ] TerminalOutput.tsx
       - Display Judge0 results
@@ -310,6 +337,16 @@ ViewerPage (Suspense wrapper)
 | 014 | SplitLayout drag handle | Better UX than fixed 50/50 split |
 | 015 | Suspense on viewer page | useSearchParams() needs Suspense boundary |
 | 016 | iframe sandbox="allow-scripts" | Security — no allow-same-origin ever |
+| 017 | Change from Piston API (went whitelist-only 2/15/2025) to Judge0 CE community instance (ce.judge0.com) — free, no key |
+
+Known Gotcha 4: Piston API is whitelist-only since Feb 2025 — use ce.judge0.com instead
+
+File status — update:
+src/app/api/execute/route.ts   ✅  (was ⬜)
+src/types/Judge0.types.ts      → renamed to Execution.types.ts
+
+Phase 3 note — replace Judge0 warning line with:
+⚠️ Piston API is used for execution (no key needed). sql.js loads WASM from CDN.
 
 ---
 
@@ -339,8 +376,8 @@ ViewerPage (Suspense wrapper)
 ```
 Phase 1 — Foundation UI   ✅ COMPLETE  (14/14)
 Phase 2 — Code Viewer     ✅ COMPLETE  (7/7)
-Phase 3 — Live Execution  ⬜ NEXT      (0/7)
-Phase 4 — Polish/Deploy   ⬜ Pending   (0/9)
+Phase 3 — Live Execution  ✅ COMPLETE  (7/7)
+Phase 4 — Polish/Deploy   ⬜ NEXT      (0/9)
 
-Overall: ~55% complete
+Overall: ~75% complete
 ```

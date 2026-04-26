@@ -3,19 +3,18 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import {
-  ChevronLeft, FileCode2,
-  BookOpen, List, X,
-} from 'lucide-react';
+import { ChevronLeft, FileCode2, BookOpen, List, X } from 'lucide-react';
 import { MOCK_FILES, type MockFile } from '@/data/mockFiles';
 import { detectLanguage } from '@/lib/language';
 import { LANGUAGE_MAP } from '@/constants/LANGUAGES';
+import { useCodeExecution } from '@/hooks/useCodeExecution';
 import CodeViewer from '@/components/viewer/CodeViewer';
 import LivePreview from '@/components/viewer/LivePreview';
 import SplitLayout from '@/components/viewer/SplitLayout';
 import CopyButton from '@/components/shared/CopyButton';
+import RunButton from '@/components/viewer/RunButton';
 
-/* ── Language badge pill ─────────────────────────────────── */
+/* ── Language badge ──────────────────────────────────────── */
 function LangBadge({ filename }: { filename: string }) {
   const lang = detectLanguage(filename);
   const config = LANGUAGE_MAP[lang];
@@ -36,27 +35,24 @@ function LangBadge({ filename }: { filename: string }) {
   );
 }
 
-/* ── File sidebar ────────────────────────────────────────── */
-interface FileSidebarProps {
+/* ── File Sidebar ────────────────────────────────────────── */
+function FileSidebar({
+  files, active, onSelect, onClose,
+}: {
   files: MockFile[];
   active: MockFile;
   onSelect: (f: MockFile) => void;
   onClose: () => void;
-}
-
-function FileSidebar({ files, active, onSelect, onClose }: FileSidebarProps) {
+}) {
   return (
     <div
       className="flex flex-col h-full"
       style={{
         background: 'var(--bg-surface)',
         borderRight: '1px solid var(--border-subtle)',
-        minWidth: '220px',
-        maxWidth: '280px',
-        width: '260px',
+        width: '260px', minWidth: '220px', maxWidth: '280px',
       }}
     >
-      {/* Header */}
       <div
         className="flex items-center justify-between px-4 py-3 flex-shrink-0"
         style={{ borderBottom: '1px solid var(--border-subtle)' }}
@@ -76,7 +72,6 @@ function FileSidebar({ files, active, onSelect, onClose }: FileSidebarProps) {
         </button>
       </div>
 
-      {/* File list */}
       <div className="flex-1 overflow-y-auto py-2">
         {files.map((file) => {
           const lang = detectLanguage(file.name);
@@ -94,10 +89,7 @@ function FileSidebar({ files, active, onSelect, onClose }: FileSidebarProps) {
                 borderLeft: isActive ? `2px solid ${color}` : '2px solid transparent',
               }}
             >
-              <FileCode2
-                className="w-3.5 h-3.5 flex-shrink-0"
-                style={{ color }}
-              />
+              <FileCode2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color }} />
               <div className="min-w-0">
                 <p
                   className="text-xs font-medium truncate"
@@ -117,31 +109,30 @@ function FileSidebar({ files, active, onSelect, onClose }: FileSidebarProps) {
   );
 }
 
-/* ── Top bar ─────────────────────────────────────────────── */
-interface TopBarProps {
+/* ── Top Bar ─────────────────────────────────────────────── */
+function TopBar({
+  file, onToggleSidebar, sidebarOpen, onRun, execState,
+}: {
   file: MockFile;
   onToggleSidebar: () => void;
   sidebarOpen: boolean;
-}
+  onRun: () => void;
+  execState: ReturnType<typeof useCodeExecution>['state'];
+}) {
+  const lang = detectLanguage(file.name);
+  const config = LANGUAGE_MAP[lang];
+  const canRun = config?.canRun ?? false;
 
-function TopBar({ file, onToggleSidebar, sidebarOpen }: TopBarProps) {
   return (
     <div
       className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 flex-shrink-0 flex-wrap sm:flex-nowrap"
-      style={{
-        background: 'var(--bg-surface)',
-        borderBottom: '1px solid var(--border-subtle)',
-      }}
+      style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-subtle)' }}
     >
-      {/* Back button */}
+      {/* Back */}
       <Link
         href="/courses"
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 flex-shrink-0"
-        style={{
-          background: 'var(--glass-bg)',
-          border: '1px solid var(--border-default)',
-          color: 'var(--text-secondary)',
-        }}
+        style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-default)', color: 'var(--text-secondary)' }}
       >
         <ChevronLeft className="w-3.5 h-3.5" />
         <span className="hidden sm:inline">Courses</span>
@@ -154,15 +145,14 @@ function TopBar({ file, onToggleSidebar, sidebarOpen }: TopBarProps) {
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 flex-shrink-0"
         style={{
           background: sidebarOpen ? 'var(--glass-bg-hover)' : 'var(--glass-bg)',
-          border: '1px solid var(--border-default)',
-          color: 'var(--text-secondary)',
+          border: '1px solid var(--border-default)', color: 'var(--text-secondary)',
         }}
       >
         <BookOpen className="w-3.5 h-3.5" />
         <span className="hidden sm:inline">Files</span>
       </button>
 
-      {/* File path breadcrumb */}
+      {/* File path */}
       <div className="flex items-center gap-1.5 min-w-0 flex-1">
         <FileCode2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
         <span
@@ -174,33 +164,31 @@ function TopBar({ file, onToggleSidebar, sidebarOpen }: TopBarProps) {
         </span>
       </div>
 
-      {/* Right: lang badge + copy */}
+      {/* Right actions */}
       <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
         <LangBadge filename={file.name} />
         <CopyButton text={file.content} size="sm" label />
+        {canRun && <RunButton state={execState} onRun={onRun} />}
       </div>
     </div>
   );
 }
 
-/* ── Main viewer (inner) ─────────────────────────────────── */
+/* ── Main viewer ─────────────────────────────────────────── */
 function ViewerInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  /* ── Resolve active file from ?path= or default to first ── */
   const [activeFile, setActiveFile] = useState<MockFile>(() => {
-    const pathParam = searchParams.get('path');
-    if (pathParam !== null) {
-      const found = MOCK_FILES.find((f) => f.path === pathParam);
-      if (found !== undefined) return found;
-    }
-    return MOCK_FILES[0]!;
+    const p = searchParams.get('path');
+    return (p !== null ? MOCK_FILES.find((f) => f.path === p) : undefined)
+      ?? MOCK_FILES[0]!;
   });
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { result, state: execState, execute, reset } = useCodeExecution();
 
-  /* ── Sync ?path= query param when file changes ───────────── */
+  /* Sync URL to active file */
   useEffect(() => {
     const current = searchParams.get('path');
     if (current !== activeFile.path) {
@@ -208,53 +196,71 @@ function ViewerInner() {
     }
   }, [activeFile, router, searchParams]);
 
-  /* ── Left panel: editor ──────────────────────────────────── */
+  /* Reset execution output when switching files */
+  const handleFileSelect = (file: MockFile): void => {
+    setActiveFile(file);
+    reset();
+  };
+
+  /* ── Run code via Piston ─────────────────────────────────
+     config.piston holds { language, version } for executable
+     languages. SQL uses the sql runner (SqlPreview), not Piston.
+  ─────────────────────────────────────────────────────────── */
+  const handleRun = (): void => {
+    const lang = detectLanguage(activeFile.name);
+    const config = LANGUAGE_MAP[lang];
+
+    // Guard: only call Piston for languages that have a runtime config
+    if (config?.piston === null || config?.piston === undefined) return;
+
+    void execute(
+      activeFile.content,
+      config.piston.language,
+      config.piston.version,
+    );
+  };
+
   const editorPanel = (
     <div className="flex flex-col h-full overflow-hidden">
       <CodeViewer
         code={activeFile.content}
         language={activeFile.language}
-        readOnly={true}
+        readOnly
         height="100%"
       />
     </div>
   );
 
-  /* ── Right panel: preview ────────────────────────────────── */
   const previewPanel = (
     <LivePreview
       code={activeFile.content}
       filename={activeFile.name}
+      execState={execState}
+      execResult={result}
     />
   );
 
   return (
-    <div
-      className="flex flex-col h-screen overflow-hidden"
-      style={{ background: 'var(--bg-base)' }}
-    >
-      {/* Top bar */}
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: 'var(--bg-base)' }}>
       <TopBar
         file={activeFile}
         onToggleSidebar={() => setSidebarOpen((p) => !p)}
         sidebarOpen={sidebarOpen}
+        onRun={handleRun}
+        execState={execState}
       />
 
-      {/* Body: optional sidebar + split view */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
         {sidebarOpen && (
           <div className="hidden sm:flex flex-shrink-0">
             <FileSidebar
               files={MOCK_FILES}
               active={activeFile}
-              onSelect={setActiveFile}
+              onSelect={handleFileSelect}
               onClose={() => setSidebarOpen(false)}
             />
           </div>
         )}
-
-        {/* Split layout */}
         <div className="flex-1 overflow-hidden">
           <SplitLayout left={editorPanel} right={previewPanel} defaultSplit={55} />
         </div>
@@ -263,7 +269,7 @@ function ViewerInner() {
   );
 }
 
-/* ── Page export (Suspense required for useSearchParams) ─── */
+/* ── Page export ─────────────────────────────────────────── */
 export default function ViewerPage() {
   return (
     <Suspense
@@ -272,7 +278,10 @@ export default function ViewerPage() {
           className="h-screen flex items-center justify-center"
           style={{ background: 'var(--bg-base)' }}
         >
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2" style={{ borderColor: 'var(--accent-1)' }} />
+          <div
+            className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2"
+            style={{ borderColor: 'var(--accent-1)' }}
+          />
         </div>
       }
     >

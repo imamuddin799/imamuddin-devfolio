@@ -6,7 +6,7 @@
 ## 📌 PROJECT IDENTITY
 
 - **Project**: Java Full Stack Learning — Code Showcase Portfolio
-- **Type**: Next.js 15 Web Application
+- **Type**: Next.js 16 Web Application
 - **Purpose**: Display code snippets and projects from a GitHub repository with live preview
 - **Memory File**: `PROJECT_MEMORY.md` (read this too before coding)
 
@@ -19,7 +19,7 @@
 ```
 ✅ ALWAYS USE                          ❌ NEVER USE
 --------------------------------------------------------------
-Next.js 15 (App Router)               Next.js 13/14 patterns
+Next.js 16 (App Router, Turbopack)        Next.js 13/14/15 patterns
 React 19                               React 17/18 patterns
 TypeScript 5.x                         JavaScript (.js files)
 Tailwind CSS v4                        Tailwind CSS v3
@@ -64,6 +64,21 @@ export async function getStaticProps() { ... }     // BANNED
 
 // ❌ WRONG — Old API route format
 export default function handler(req, res) { ... } // BANNED
+```
+
+#### Next.js 16 — Turbopack is Default (CRITICAL)
+```typescript
+// ✅ CORRECT next.config.ts — Turbopack, no webpack
+import type { NextConfig } from 'next';
+const nextConfig: NextConfig = {
+  turbopack: {},   // empty object silences warning, uses defaults
+};
+export default nextConfig;
+
+// ❌ WRONG — webpack config crashes Next.js 16 Turbopack
+const nextConfig = {
+  webpack(config) { ... }  // BANNED in Next.js 16 with Turbopack
+};
 ```
 
 #### React 19 — No forwardRef
@@ -655,7 +670,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 | Package | Version | Notes |
 |---|---|---|
-| next | 15.x | App Router only |
+| next | 16.x | App Router, Turbopack default — NO webpack config |
 | react | 19.x | No forwardRef |
 | react-dom | 19.x | |
 | typescript | 5.x | strict mode |

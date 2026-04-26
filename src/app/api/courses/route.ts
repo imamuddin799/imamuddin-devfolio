@@ -1,19 +1,23 @@
-import { type NextRequest } from 'next/server';
 import { listContents } from '@/lib/github';
+import { COURSES } from '@/constants/COURSES';
 import { type ApiResponse } from '@/types/Api.types';
 import { type GitHubFile } from '@/types/GitHub.types';
 
-export async function GET(_request: NextRequest): Promise<Response> {
+export const revalidate = 3600; // ISR — revalidate every hour
+
+export async function GET(): Promise<Response> {
   try {
-    const contents = await listContents('');
-    const courses = contents.filter((item) => item.type === 'dir');
+    const items = await listContents('');
+    const dirs = items.filter((i) => i.type === 'dir');
+
+    // Only return folders that match our known courses
+    const knownPaths = new Set(COURSES.map((c) => c.path));
+    const courses = dirs.filter((d) => knownPaths.has(d.name));
 
     const response: ApiResponse<GitHubFile[]> = { data: courses };
-    return Response.json(response, {
-      headers: { 'Cache-Control': 's-maxage=3600, stale-while-revalidate' },
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    return Response.json(response);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to fetch courses';
     return Response.json({ error: message }, { status: 500 });
   }
 }

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Code2, Menu, X, Palette } from 'lucide-react';
+import GlobalSearch from '@/components/shared/GlobalSearch';
 
 const THEMES = [
   { id: 'midnight-aurora', label: 'Midnight Aurora', color: '#06b6d4' },
@@ -18,24 +19,12 @@ const THEMES = [
   { id: 'deep-ocean', label: 'Deep Ocean', color: '#0ea5e9' },
 ] as const;
 
-type ThemeId = (typeof THEMES)[number]['id'];
-
-const THEME_IDS = THEMES.map((t) => t.id);
-
-function isValidThemeId(id: string): id is ThemeId {
-  return (THEME_IDS as readonly string[]).includes(id);
-}
+type ThemeId = typeof THEMES[number]['id'];
 
 const NAV_LINKS = [
   { href: '/courses', label: 'Courses' },
   { href: '/viewer', label: 'Viewer' },
 ] as const;
-
-/* ── Applies theme by setting data-theme on <html> and updating body bg ── */
-function applyThemeToDOM(id: ThemeId): void {
-  document.documentElement.setAttribute('data-theme', id);
-  localStorage.setItem('devfolio-theme', id);
-}
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -43,8 +32,6 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [themePanelOpen, setThemePanelOpen] = useState(false);
   const [activeTheme, setActiveTheme] = useState<ThemeId>('midnight-aurora');
-
-  const paletteButtonRef = useRef<HTMLButtonElement>(null);
 
   /* ── scroll listener ─────────────────────────────────────── */
   useEffect(() => {
@@ -59,20 +46,19 @@ export default function Navbar() {
     setThemePanelOpen(false);
   }, [pathname]);
 
-  /* ── restore persisted theme on mount ───────────────────── */
+  /* ── persist theme ───────────────────────────────────────── */
   useEffect(() => {
-    const saved = localStorage.getItem('devfolio-theme');
-    if (saved !== null && isValidThemeId(saved)) {
-      applyThemeToDOM(saved);
-      setActiveTheme(saved);
+    const saved = localStorage.getItem('devfolio-theme') as ThemeId | null;
+    if (saved && THEMES.some((t) => t.id === saved)) {
+      applyTheme(saved);
     }
-  }, []); // runs once on mount — intentional
+  }, []);
 
-  function handleThemeSelect(id: ThemeId): void {
-    applyThemeToDOM(id);
+  const applyTheme = useCallback((id: ThemeId) => {
+    document.documentElement.setAttribute('data-theme', id);
+    localStorage.setItem('devfolio-theme', id);
     setActiveTheme(id);
-    setThemePanelOpen(false);
-  }
+  }, []);
 
   return (
     <>
@@ -80,7 +66,9 @@ export default function Navbar() {
       <header
         className={[
           'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          scrolled ? 'backdrop-blur-xl border-b' : 'backdrop-blur-sm',
+          scrolled
+            ? 'backdrop-blur-xl border-b'
+            : 'backdrop-blur-sm',
         ].join(' ')}
         style={{
           background: scrolled ? 'var(--bg-overlay)' : 'transparent',
@@ -101,10 +89,7 @@ export default function Navbar() {
               >
                 <Code2 className="w-4 h-4" style={{ color: 'var(--accent-1)' }} />
               </span>
-              <span
-                className="font-bold text-base sm:text-lg tracking-tight"
-                style={{ color: 'var(--text-primary)' }}
-              >
+              <span className="font-bold text-base sm:text-lg tracking-tight" style={{ color: 'var(--text-primary)' }}>
                 imam<span style={{ color: 'var(--accent-1)' }}>uddin</span>
                 <span className="hidden sm:inline" style={{ color: 'var(--text-secondary)' }}>.dev</span>
               </span>
@@ -139,13 +124,15 @@ export default function Navbar() {
 
             {/* Right actions */}
             <div className="flex items-center gap-2">
+              {/* Search */}
+              <div className="hidden md:block">
+                <GlobalSearch />
+              </div>
 
               {/* Theme toggle */}
               <button
-                ref={paletteButtonRef}
                 onClick={() => setThemePanelOpen((p) => !p)}
                 aria-label="Change theme"
-                aria-expanded={themePanelOpen}
                 className="flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 hover:scale-105"
                 style={{
                   background: themePanelOpen ? 'var(--glass-bg-hover)' : 'var(--glass-bg)',
@@ -175,60 +162,44 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* ── Theme panel ───────────────────────────────────────────
-          Positioned fixed so it's never clipped by parent overflow.
-          right-4/sm:right-6/lg:right-8 mirrors the navbar padding.
-      ────────────────────────────────────────────────────────── */}
+      {/* ── Theme panel ───────────────────────────────────────── */}
       {themePanelOpen && (
         <div
-          role="dialog"
-          aria-label="Choose theme"
-          className="fixed top-[4.5rem] right-4 sm:right-6 lg:right-8 z-[60] rounded-2xl p-4 w-56 animate-scale-in"
+          className="fixed top-20 right-4 sm:right-6 lg:right-8 z-50 rounded-2xl p-4 w-64 animate-scale-in"
           style={{
             background: 'var(--bg-elevated)',
-            border: '1px solid var(--border-strong)',
+            border: '1px solid var(--border-default)',
             boxShadow: 'var(--glass-shadow)',
-            backdropFilter: 'blur(24px)',
+            backdropFilter: 'blur(20px)',
           }}
         >
-          <p
-            className="text-xs font-semibold uppercase tracking-widest mb-3"
-            style={{ color: 'var(--text-muted)' }}
-          >
+          <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
             Choose Theme
           </p>
-
-          <div className="grid grid-cols-1 gap-1.5">
-            {THEMES.map((theme) => {
-              const isActive = activeTheme === theme.id;
-              return (
-                <button
-                  key={theme.id}
-                  onClick={() => handleThemeSelect(theme.id)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-medium transition-all duration-150 hover:scale-[1.01] active:scale-[0.99]"
+          <div className="grid grid-cols-2 gap-2">
+            {THEMES.map((theme) => (
+              <button
+                key={theme.id}
+                onClick={() => applyTheme(theme.id)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-left text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
+                style={{
+                  background: activeTheme === theme.id ? 'var(--glass-bg-hover)' : 'var(--glass-bg)',
+                  border: activeTheme === theme.id
+                    ? `1px solid ${theme.color}`
+                    : '1px solid var(--border-subtle)',
+                  color: activeTheme === theme.id ? 'var(--text-primary)' : 'var(--text-secondary)',
+                }}
+              >
+                <span
+                  className="w-3 h-3 rounded-full flex-shrink-0"
                   style={{
-                    background: isActive ? 'var(--glass-bg-hover)' : 'var(--glass-bg)',
-                    border: isActive ? `1px solid ${theme.color}` : '1px solid var(--border-subtle)',
-                    color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                    background: theme.color,
+                    boxShadow: activeTheme === theme.id ? `0 0 8px ${theme.color}` : 'none',
                   }}
-                >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                    style={{
-                      background: theme.color,
-                      boxShadow: isActive ? `0 0 8px ${theme.color}80` : 'none',
-                    }}
-                  />
-                  <span className="truncate">{theme.label}</span>
-                  {isActive && (
-                    <span
-                      className="ml-auto w-1.5 h-1.5 rounded-full flex-shrink-0"
-                      style={{ background: theme.color }}
-                    />
-                  )}
-                </button>
-              );
-            })}
+                />
+                <span className="truncate">{theme.label}</span>
+              </button>
+            ))}
           </div>
         </div>
       )}
@@ -265,12 +236,11 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* ── Backdrop (closes panels) — z-[55] sits between panel(60) and content(40) */}
+      {/* ── Backdrop (closes panels) ──────────────────────────── */}
       {(menuOpen || themePanelOpen) && (
         <div
-          className="fixed inset-0 z-[55]"
+          className="fixed inset-0 z-30"
           onClick={() => { setMenuOpen(false); setThemePanelOpen(false); }}
-          aria-hidden="true"
         />
       )}
 
